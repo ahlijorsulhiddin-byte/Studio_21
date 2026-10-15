@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="My Studio — photo, video and avatar editor" />
+  <title>My Studio — YOUR CREATIVE SPACE</title>
+  <script>
+    // Correct base path for GitHub Pages (project site: /repo-name/)
+    (function () {
+      var path = location.pathname || '/';
+      if (path.endsWith('.html')) path = path.replace(/[^/]+$/, '');
+      else if (!path.endsWith('/')) path = path + '/';
+      // e.g. /my-studio/ or /
+      var base = document.createElement('base');
+      base.href = path;
+      document.head.appendChild(base);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <!-- Critical fallback -->
+  <style>
+    html, body { margin: 0; background: #080D1A; color: #F4F6FF; font-family: Inter, system-ui, sans-serif; }
+    .logo-icon, .logo svg { width: 22px !important; height: 22px !important; max-width: 22px; max-height: 22px; }
+    .logo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; text-decoration: none; color: #F4F6FF; }
+    .top-nav { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(21,30,50,0.9); }
+    .nav-links { display: flex; gap: 6px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { color: #F4F6FF; text-decoration: none; font-size: 13px; padding: 6px 10px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    #view-home .hero { padding: 16px !important; margin: 0 !important; min-height: 0 !important; }
+  </style>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="theme-neon-glass">
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Command Palette -->
+  <div id="command-palette" class="command-palette hidden" role="dialog" aria-label="Палитра команд">
+    <div class="command-palette-backdrop"></div>
+    <div class="command-palette-modal">
+      <div class="command-palette-input-wrap">
+        <i data-lucide="search" class="icon"></i>
+        <input type="text" id="command-input" placeholder="Поиск команд… (Ctrl+K)" autocomplete="off" />
+        <kbd>Esc</kbd>
+      </div>
+      <ul id="command-list" class="command-list" role="listbox"></ul>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app" class="app">
+    <!-- Top Navigation -->
+    <header class="top-nav" id="top-nav">
+      <div class="nav-left">
+        <a href="#" class="logo" id="logo-btn" data-view="home" title="My Studio">
+          <svg class="logo-icon" width="22" height="22" viewBox="0 0 40 40" fill="none" aria-hidden="true" style="width:22px;height:22px">
+            <circle cx="20" cy="20" r="16" stroke="url(#logoGrad)" stroke-width="2.5"/>
+            <circle cx="20" cy="20" r="8" stroke="url(#logoGrad)" stroke-width="2"/>
+            <circle cx="20" cy="20" r="3" fill="url(#logoGrad)"/>
+            <path d="M20 4v4M20 32v4M4 20h4M32 20h4" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                <stop stop-color="#7657FF"/>
+                <stop offset="1" stop-color="#21C8F6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="logo-text">My Studio</span>
+        </a>
+      </div>
+      <nav class="nav-center" aria-label="Основная навигация">
+        <button class="nav-btn active" data-view="home"><i data-lucide="home"></i><span>Главная</span></button>
+        <button class="nav-btn" data-view="photo"><i data-lucide="image"></i><span>Фото</span></button>
+        <button class="nav-btn" data-view="video"><i data-lucide="video"></i><span>Видео</span></button>
+        <button class="nav-btn" data-view="avatar"><i data-lucide="user-circle"></i><span>Аватарки</span></button>
+        <button class="nav-btn" data-view="projects"><i data-lucide="folder"></i><span>Проекты</span></button>
+      </nav>
+      <div class="nav-right">
+        <button class="icon-btn" id="theme-toggle" title="Тема (Ctrl+T)" aria-label="Переключить тему">
+          <i data-lucide="palette"></i>
+        </button>
+        <button class="icon-btn" id="settings-btn" title="Настройки" aria-label="Настройки">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+      <!-- HOME VIEW -->
+                  <section id="view-home" class="view active">
+        <div class="hero hero-center-logo">
+          <div class="hero-logo-wrap">
+            <svg class="hero-logo-svg" width="72" height="72" viewBox="0 0 40 40" fill="none" aria-hidden="true" style="width:72px;height:72px">
+              <circle cx="20" cy="20" r="16" stroke="url(#heroLogoGrad)" stroke-width="2.5"/>
+              <circle cx="20" cy="20" r="8" stroke="url(#heroLogoGrad)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="3" fill="url(#heroLogoGrad)"/>
+              <path d="M20 4v4M20 32v4M4 20h4M32 20h4" stroke="url(#heroLogoGrad)" stroke-width="2" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="heroLogoGrad" x1="0" y1="0" x2="40" y2="40">
+                  <stop stop-color="#7657FF"/>
+                  <stop offset="1" stop-color="#21C8F6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 class="hero-logo-title">My Studio</h1>
+          </div>
+          <p class="hero-desc">Edit photos, create videos and design avatars in one app.</p>
+          <button class="btn btn-primary btn-lg" id="start-editing-btn">
+            <i data-lucide="sparkles"></i> Start editing
+          </button>
+        </div>
+        <div class="studio-beauty-bar">
+          <span class="beauty-label">Оформление студии</span>
+          <div class="beauty-themes" id="home-theme-picks">
+            <button type="button" class="beauty-chip active" data-theme="neon-glass" title="Neon Glass">Neon</button>
+            <button type="button" class="beauty-chip" data-theme="midnight-purple" title="Midnight Purple">Purple</button>
+            <button type="button" class="beauty-chip" data-theme="arctic-blue" title="Arctic Blue">Blue</button>
+            <button type="button" class="beauty-chip" data-theme="minimal-dark" title="Minimal Dark">Dark</button>
+            <button type="button" class="beauty-chip" data-theme="light" title="Light">Light</button>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="home-settings-btn">
+            <i data-lucide="settings"></i> Настройки
+          </button>
+        </div>
+<div class="tools-grid">
+          <article class="tool-card" data-view="photo">
+            <div class="tool-icon photo-icon"><i data-lucide="image"></i></div>
+            <h3>Фоторедактор</h3>
+            <p>Фильтры, коррекция, кадрирование, текст и экспорт в PNG/JPG</p>
+            <ul class="tool-features">
+              <li>Яркость, контраст, насыщенность</li>
+              <li>12+ фильтров с интенсивностью</li>
+              <li>Обрезка 1:1, 16:9, 9:16</li>
+            </ul>
+            <button class="btn btn-secondary open-editor-btn" data-view="photo">Открыть</button>
+          </article>
+          <article class="tool-card" data-view="video">
+            <div class="tool-icon video-icon"><i data-lucide="clapperboard"></i></div>
+            <h3>Видеоредактор</h3>
+            <p>Монтаж, фильтры, текст, аудио и экспорт прямо в браузере</p>
+            <ul class="tool-features">
+              <li>Обрезка и timeline</li>
+              <li>Фильтры и текст поверх</li>
+              <li>Экспорт через MediaRecorder</li>
+            </ul>
+            <button class="btn btn-secondary open-editor-btn" data-view="video">Открыть</button>
+          </article>
+          <article class="tool-card" data-view="avatar">
+            <div class="tool-icon avatar-icon"><i data-lucide="circle-user"></i></div>
+            <h3>Редактор аватарок</h3>
+            <p>Формы, рамки, фоны и экспорт в нужном размере</p>
+            <ul class="tool-features">
+              <li>Круг, квадрат, скругление</li>
+              <li>Неоновые рамки</li>
+              <li>128–1024 px</li>
+            </ul>
+            <button class="btn btn-secondary open-editor-btn" data-view="avatar">Открыть</button>
+          </article>
+        </div>
+
+        <section class="recent-projects home-projects-section">
+          <div class="section-header">
+            <h2>Saved projects</h2>
+            <button class="btn btn-ghost" data-view="projects">Все проекты</button>
+          </div>
+          <p class="section-sub">«В мои проекты» — сохранить и очистить студию. Открыть снова — только из «Сохранённых». «Скачать файл» — на компьютер.</p>
+          <div id="home-projects" class="projects-grid empty-state">
+            <div class="empty-card">
+              <i data-lucide="folder-open"></i>
+              <p>Пока нет сохранённых проектов</p>
+              <p class="hint">Откройте редактор → «В мои проекты» — появится здесь. «Скачать файл» — в Загрузки.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- PHOTO EDITOR VIEW -->
+      <section id="view-photo" class="view editor-view">
+        <div class="editor-layout photo-layout">
+          <header class="editor-topbar">
+            <button class="icon-btn back-btn" data-view="home" title="Назад"><i data-lucide="arrow-left"></i></button>
+            <input type="text" class="project-name" id="photo-project-name" value="Новый фотопроект" />
+            <div class="topbar-actions">
+              <button class="icon-btn" id="photo-undo" title="Отменить (Ctrl+Z)" disabled><i data-lucide="undo-2"></i></button>
+              <button class="icon-btn" id="photo-redo" title="Повторить (Ctrl+Y)" disabled><i data-lucide="redo-2"></i></button>
+              <button class="btn btn-secondary btn-sm" id="photo-save" title="Сохранить в «Мои проекты» (Ctrl+S)"><i data-lucide="save"></i> В мои проекты</button>
+              <button class="btn btn-ghost btn-sm" id="photo-new-project" title="Новый проект"><i data-lucide="plus"></i> Новый</button>
+              <button class="icon-btn" id="photo-fullscreen" title="Полный экран"><i data-lucide="maximize"></i></button>
+              <button class="btn btn-primary btn-sm" id="photo-export-btn"><i data-lucide="download"></i> Скачать файл</button>
+            </div>
+          </header>
+          <div class="editor-body photo-body">
+            <div class="canvas-area photo-stage" id="photo-canvas-area">
+              <div class="canvas-wrap" id="photo-canvas-wrap">
+                <canvas id="photo-canvas"></canvas>
+                <canvas id="photo-overlay" class="overlay-canvas"></canvas>
+                <canvas id="photo-crop-canvas" class="crop-canvas hidden"></canvas>
+                <div id="photo-compare-slider" class="compare-slider hidden">
+                  <div class="compare-handle"></div>
+                </div>
+                <div class="canvas-placeholder" id="photo-placeholder">
+                  <i data-lucide="image-plus"></i>
+                  <p>Большая сцена редактирования</p>
+                  <button type="button" class="btn btn-primary btn-lg btn-upload-glow" id="photo-upload-btn">
+                    <i data-lucide="upload"></i> Выбрать файл
+                  </button>
+                  <p class="hint">или перетащите PNG, JPG, WebP сюда</p>
+                </div>
+              </div>
+              <div class="canvas-status" id="photo-status"></div>
+              <input type="file" id="photo-file-input" accept="image/png,image/jpeg,image/webp,image/jpg" hidden />
+            </div>
+            <aside class="editor-sidebar right-sidebar" id="photo-right">
+              <div class="sidebar-section photo-file-actions">
+                <button class="btn btn-primary btn-block btn-upload-glow" id="photo-upload-btn-side"><i data-lucide="upload"></i> Выбрать файл</button>
+                <button class="btn btn-ghost btn-block" id="photo-replace-btn" disabled><i data-lucide="refresh-cw"></i> Заменить</button>
+                <button class="btn btn-ghost btn-block danger" id="photo-clear-btn" disabled><i data-lucide="trash-2"></i> Удалить</button>
+              </div>
+              <div id="photo-panel-adjust" class="panel active">
+                <h4>Коррекция</h4>
+                <div class="control-group">
+                  <label>Яркость <span id="val-brightness">0</span></label>
+                  <input type="range" id="adj-brightness" min="-100" max="100" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Контраст <span id="val-contrast">0</span></label>
+                  <input type="range" id="adj-contrast" min="-100" max="100" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Насыщенность <span id="val-saturate">0</span></label>
+                  <input type="range" id="adj-saturate" min="-100" max="100" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Температура <span id="val-temp">0</span></label>
+                  <input type="range" id="adj-temp" min="-100" max="100" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Оттенок <span id="val-hue">0</span></label>
+                  <input type="range" id="adj-hue" min="-180" max="180" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Резкость <span id="val-sharpen">0</span></label>
+                  <input type="range" id="adj-sharpen" min="0" max="100" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Размытие <span id="val-blur">0</span></label>
+                  <input type="range" id="adj-blur" min="0" max="20" value="0" step="0.5" />
+                </div>
+                <div class="control-group">
+                  <label>Виньетка <span id="val-vignette">0</span></label>
+                  <input type="range" id="adj-vignette" min="0" max="100" value="0" />
+                </div>
+                <button class="btn btn-primary btn-block" id="photo-magic-enhance"><i data-lucide="wand-2"></i> Magic Enhance</button>
+                <button class="btn btn-ghost btn-block" id="photo-reset-adj">Сбросить коррекцию</button>
+              </div>
+              <div id="photo-panel-filters" class="panel">
+                <h4>Фильтры</h4>
+                <div class="filters-grid" id="photo-filters-grid"></div>
+                <div class="control-group">
+                  <label>Интенсивность <span id="val-filter-intensity">100</span>%</label>
+                  <input type="range" id="filter-intensity" min="0" max="100" value="100" />
+                </div>
+              </div>
+              <div id="photo-panel-crop" class="panel">
+                <h4>Вырезать сцену</h4>
+                <p class="hint">Выберите соотношение, затем нарисуйте область на фото или используйте готовый кадр.</p>
+                <div class="btn-group">
+                  <button class="btn btn-ghost crop-ratio active" data-ratio="free">Свободно</button>
+                  <button class="btn btn-ghost crop-ratio" data-ratio="1:1">1:1</button>
+                  <button class="btn btn-ghost crop-ratio" data-ratio="4:5">4:5</button>
+                  <button class="btn btn-ghost crop-ratio" data-ratio="16:9">16:9</button>
+                  <button class="btn btn-ghost crop-ratio" data-ratio="9:16">9:16</button>
+                </div>
+                <button class="btn btn-secondary btn-block" id="photo-start-crop"><i data-lucide="crop"></i> Начать вырезание</button>
+                <button class="btn btn-primary btn-block" id="photo-apply-crop" disabled><i data-lucide="check"></i> Применить обрезку</button>
+                <button class="btn btn-ghost btn-block" id="photo-reset-crop">Сбросить обрезку</button>
+              </div>
+              <div id="photo-panel-transform" class="panel">
+                <h4>Трансформация</h4>
+                <div class="btn-group">
+                  <button class="btn btn-ghost" id="photo-rotate-left"><i data-lucide="rotate-ccw"></i> −90°</button>
+                  <button class="btn btn-ghost" id="photo-rotate-right"><i data-lucide="rotate-cw"></i> +90°</button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-ghost" id="photo-flip-h"><i data-lucide="flip-horizontal"></i> Отразить H</button>
+                  <button class="btn btn-ghost" id="photo-flip-v"><i data-lucide="flip-vertical"></i> Отразить V</button>
+                </div>
+                <button class="btn btn-ghost btn-block" id="photo-reset-transform">Сбросить трансформации</button>
+              </div>
+              <div id="photo-panel-text" class="panel">
+                <h4>Текст</h4>
+                <input type="text" id="photo-text-input" placeholder="Введите текст…" class="input" />
+                <div class="control-group">
+                  <label>Размер <span id="val-text-size">48</span></label>
+                  <input type="range" id="photo-text-size" min="12" max="120" value="48" />
+                </div>
+                <div class="control-group">
+                  <label>Цвет</label>
+                  <input type="color" id="photo-text-color" value="#ffffff" />
+                </div>
+                <button class="btn btn-primary btn-block" id="photo-add-text">Добавить текст</button>
+                <h4 style="margin-top:14px">Стикеры и эмодзи</h4>
+                <p class="hint">Добавьте и перетащите на фото. Размер — ползунком.</p>
+                <div class="control-group">
+                  <label>Размер эмодзи <span id="val-photo-emoji-size">56</span></label>
+                  <input type="range" id="photo-emoji-size" min="24" max="160" value="56" />
+                </div>
+                <div class="stickers-grid" id="photo-stickers">
+                  <button type="button" class="sticker-btn" data-emoji="😂">😂</button>
+                  <button type="button" class="sticker-btn" data-emoji="🔥">🔥</button>
+                  <button type="button" class="sticker-btn" data-emoji="💯">💯</button>
+                  <button type="button" class="sticker-btn" data-emoji="👀">👀</button>
+                  <button type="button" class="sticker-btn" data-emoji="💀">💀</button>
+                  <button type="button" class="sticker-btn" data-emoji="✨">✨</button>
+                  <button type="button" class="sticker-btn" data-emoji="🚀">🚀</button>
+                  <button type="button" class="sticker-btn" data-emoji="❤️">❤️</button>
+                  <button type="button" class="sticker-btn" data-emoji="😎">😎</button>
+                  <button type="button" class="sticker-btn" data-emoji="🎉">🎉</button>
+                  <button type="button" class="sticker-btn" data-emoji="👍">👍</button>
+                  <button type="button" class="sticker-btn" data-emoji="⭐">⭐</button>
+                  <button type="button" class="sticker-btn" data-emoji="💫">💫</button>
+                  <button type="button" class="sticker-btn" data-emoji="🌈">🌈</button>
+                  <button type="button" class="sticker-btn" data-emoji="🦄">🦄</button>
+                  <button type="button" class="sticker-btn" data-emoji="💎">💎</button>
+                </div>
+                <div id="photo-text-layers" class="layers-list"></div>
+              </div>
+              <div id="photo-panel-compare" class="panel">
+                <h4>До / После</h4>
+                <p class="hint">Перетащите разделитель, чтобы сравнить оригинал и результат.</p>
+                <button class="btn btn-primary btn-block" id="photo-toggle-compare">Включить сравнение</button>
+              </div>
+              <div id="photo-panel-gif" class="panel">
+                <h4>GIF</h4>
+                <p class="hint">Загрузите GIF или соберите анимацию из текущего фото (несколько кадров с эффектом).</p>
+                <button class="btn btn-primary btn-block btn-upload-glow" id="photo-gif-upload-btn"><i data-lucide="upload"></i> Загрузить GIF</button>
+                <input type="file" id="photo-gif-file-input" accept="image/gif,.gif" hidden />
+                <div class="control-group">
+                  <label>Кадров для экспорта <span id="val-gif-frames">8</span></label>
+                  <input type="range" id="gif-frames" min="4" max="24" value="8" />
+                </div>
+                <div class="control-group">
+                  <label>Задержка кадра (мс) <span id="val-gif-delay">120</span></label>
+                  <input type="range" id="gif-delay" min="40" max="400" value="120" step="10" />
+                </div>
+                <div class="control-group">
+                  <label>Эффект</label>
+                  <select id="gif-effect" class="input">
+                    <option value="pulse">Пульс</option>
+                    <option value="zoom">Zoom</option>
+                    <option value="shake">Тряска</option>
+                    <option value="fade">Fade</option>
+                    <option value="static">Без эффекта</option>
+                  </select>
+                </div>
+                <button class="btn btn-secondary btn-block" id="photo-gif-preview"><i data-lucide="play"></i> Предпросмотр</button>
+                <button class="btn btn-primary btn-block" id="photo-gif-export"><i data-lucide="download"></i> Экспорт GIF</button>
+                <p id="gif-status" class="hint"></p>
+              </div>
+            </aside>
+          </div>
+          <div class="photo-bottom-bar" id="photo-bottom-bar">
+            <div class="bottom-tools">
+              <button class="tool-btn active" data-tool="adjust" title="Коррекция"><i data-lucide="sliders-horizontal"></i><span>Коррекция</span></button>
+              <button class="tool-btn" data-tool="filters" title="Фильтры"><i data-lucide="sparkles"></i><span>Фильтры</span></button>
+              <button class="tool-btn" data-tool="crop" title="Вырезать"><i data-lucide="crop"></i><span>Вырезать</span></button>
+              <button class="tool-btn" data-tool="transform" title="Поворот"><i data-lucide="rotate-cw"></i><span>Поворот</span></button>
+              <button class="tool-btn" data-tool="text" title="Текст"><i data-lucide="type"></i><span>Текст</span></button>
+              <button class="tool-btn" data-tool="compare" title="До / После"><i data-lucide="split"></i><span>Сравнить</span></button>
+              <button class="tool-btn" data-tool="gif" title="GIF"><i data-lucide="film"></i><span>GIF</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIDEO EDITOR VIEW -->
+      <section id="view-video" class="view editor-view">
+        <div class="editor-layout video-layout">
+          <header class="editor-topbar">
+            <button class="icon-btn back-btn" data-view="home" title="Назад"><i data-lucide="arrow-left"></i></button>
+            <input type="text" class="project-name" id="video-project-name" value="Новый видеопроект" />
+            <div class="topbar-actions">
+              <button class="icon-btn" id="video-undo" title="Отменить" disabled><i data-lucide="undo-2"></i></button>
+              <button class="icon-btn" id="video-redo" title="Повторить" disabled><i data-lucide="redo-2"></i></button>
+              <button class="btn btn-secondary btn-sm" id="video-save" title="Сохранить в «Мои проекты» (Ctrl+S)"><i data-lucide="save"></i> В мои проекты</button>
+              <button class="btn btn-ghost btn-sm" id="video-new-project" title="Новый проект"><i data-lucide="plus"></i> Новый</button>
+              <button class="btn btn-primary btn-sm" id="video-export-btn"><i data-lucide="download"></i> Скачать видео</button>
+            </div>
+          </header>
+          <div class="editor-body video-body-new">
+            <div class="canvas-area video-preview-area video-stage" id="video-stage">
+              <div class="video-player-wrap">
+                <video id="video-preview" playsinline></video>
+                <canvas id="video-canvas" class="hidden"></canvas>
+                <div class="video-placeholder" id="video-placeholder">
+                  <i data-lucide="video"></i>
+                  <p>Большая сцена видео</p>
+                  <button type="button" class="btn btn-primary btn-lg btn-upload-glow" id="video-upload-btn">
+                    <i data-lucide="upload"></i> Выбрать видео
+                  </button>
+                  <p class="hint">Можно сразу несколько MP4/WebM — склеятся на timeline</p>
+                </div>
+                <div class="video-controls" id="video-controls">
+                  <button class="icon-btn" id="video-play-pause"><i data-lucide="play"></i></button>
+                  <span id="video-time">0:00 / 0:00</span>
+                  <input type="range" id="video-seek" min="0" max="100" value="0" step="0.1" />
+                  <button class="icon-btn" id="video-mute"><i data-lucide="volume-2"></i></button>
+                  <input type="range" id="video-volume" min="0" max="1" value="1" step="0.05" />
+                </div>
+              </div>
+              <div class="timeline-wrap" id="timeline-wrap">
+                <div class="timeline-header">
+                  <span>Timeline · монтаж</span>
+                  <div class="timeline-actions">
+                    <button class="btn btn-sm btn-ghost" id="tl-split" title="Разрезать в позиции курсора"><i data-lucide="scissors"></i> Разрезать</button>
+                    <button class="btn btn-sm btn-ghost" id="tl-delete" title="Удалить сцену"><i data-lucide="trash-2"></i> Удалить</button>
+                    <button class="btn btn-sm btn-ghost" id="tl-zoom-out"><i data-lucide="zoom-out"></i></button>
+                    <button class="btn btn-sm btn-ghost" id="tl-zoom-in"><i data-lucide="zoom-in"></i></button>
+                  </div>
+                </div>
+                <div class="timeline-scroll" id="timeline-scroll">
+                  <div class="timeline" id="timeline">
+                    <div class="timeline-ruler" id="timeline-ruler"></div>
+                    <div class="timeline-track" id="video-track"></div>
+                    <div class="timeline-playhead" id="playhead"><div class="playhead-head"></div></div>
+                  </div>
+                </div>
+                <div class="trim-controls">
+                  <label>Начало сцены <input type="number" id="trim-start" min="0" step="0.1" value="0" /> с</label>
+                  <label>Конец <input type="number" id="trim-end" min="0" step="0.1" value="0" /> с</label>
+                  <button class="btn btn-sm btn-secondary" id="apply-trim"><i data-lucide="crop"></i> Обрезать сцену</button>
+                  <span id="timeline-total" class="hint">0:00</span>
+                </div>
+              </div>
+              <input type="file" id="video-file-input" accept="video/mp4,video/webm,video/ogg,video/*" multiple hidden />
+            </div>
+            <aside class="editor-sidebar right-sidebar" id="video-right">
+              <div class="sidebar-section photo-file-actions">
+                <button class="btn btn-primary btn-block btn-upload-glow" id="video-upload-btn-side"><i data-lucide="upload"></i> Добавить видео</button>
+                <button class="btn btn-ghost btn-block" id="video-replace-btn" disabled><i data-lucide="refresh-cw"></i> Заменить все</button>
+                <p class="hint">Можно выбрать несколько файлов сразу — они склеятся на timeline</p>
+              </div>
+              <div id="video-panel-clip" class="panel active">
+                <h4>Клип</h4>
+                <p id="video-info" class="hint">Нет видео</p>
+                <div class="control-group">
+                  <label>Скорость <span id="val-speed">1.0×</span></label>
+                  <input type="range" id="video-speed" min="0.25" max="2" value="1" step="0.25" />
+                </div>
+              </div>
+              <div id="video-panel-filters" class="panel">
+                <h4>Фильтры</h4>
+                <div class="filters-grid" id="video-filters-grid"></div>
+                <div class="control-group">
+                  <label>Интенсивность <span id="val-vfilter-intensity">100</span>%</label>
+                  <input type="range" id="vfilter-intensity" min="0" max="100" value="100" />
+                </div>
+              </div>
+              <div id="video-panel-text" class="panel">
+                <h4>Текст / Субтитры</h4>
+                <input type="text" id="video-text-input" placeholder="Текст…" class="input" />
+                <div class="control-group">
+                  <label>Размер</label>
+                  <input type="range" id="video-text-size" min="16" max="96" value="36" />
+                </div>
+                <div class="control-group">
+                  <label>Цвет</label>
+                  <input type="color" id="video-text-color" value="#ffffff" />
+                </div>
+                <div class="control-group">
+                  <label>Появление (с)</label>
+                  <input type="number" id="video-text-start" min="0" step="0.1" value="0" class="input" />
+                </div>
+                <div class="control-group">
+                  <label>Исчезновение (с)</label>
+                  <input type="number" id="video-text-end" min="0" step="0.1" value="5" class="input" />
+                </div>
+                <button class="btn btn-primary btn-block" id="video-add-text">Добавить</button>
+                <button class="btn btn-secondary btn-block" id="video-auto-subs"><i data-lucide="captions"></i> Автосубтитры</button>
+                <p class="hint">Авто: разбивка по времени + распознавание речи (если браузер поддерживает). Можно править вручную.</p>
+                <textarea id="video-auto-subs-text" class="input" rows="3" placeholder="Или вставьте текст — разобьём на субтитры по времени"></textarea>
+                <div id="video-text-layers" class="layers-list"></div>
+              </div>
+              <div id="video-panel-audio" class="panel">
+                <h4>Аудио</h4>
+                <button class="btn btn-secondary btn-block" id="audio-upload-btn"><i data-lucide="upload"></i> Загрузить аудио</button>
+                <input type="file" id="audio-file-input" accept="audio/*" hidden />
+                <div class="control-group">
+                  <label>Громкость исходного</label>
+                  <input type="range" id="orig-volume" min="0" max="1" value="1" step="0.05" />
+                </div>
+                <div class="control-group">
+                  <label><input type="checkbox" id="mute-original" /> Отключить исходный звук</label>
+                </div>
+              </div>
+            </aside>
+          </div>
+          <div class="photo-bottom-bar video-bottom-bar" id="video-bottom-bar">
+            <div class="bottom-tools">
+              <button class="tool-btn active" data-tool="clip" title="Клип"><i data-lucide="film"></i><span>Клип</span></button>
+              <button class="tool-btn" data-tool="filters" title="Фильтры"><i data-lucide="sparkles"></i><span>Фильтры</span></button>
+              <button class="tool-btn" data-tool="text" title="Текст"><i data-lucide="type"></i><span>Текст</span></button>
+              <button class="tool-btn" data-tool="audio" title="Аудио"><i data-lucide="music"></i><span>Аудио</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AVATAR MAKER VIEW -->
+      <section id="view-avatar" class="view editor-view">
+        <div class="editor-layout avatar-layout">
+          <header class="editor-topbar">
+            <button class="icon-btn back-btn" data-view="home" title="Назад"><i data-lucide="arrow-left"></i></button>
+            <input type="text" class="project-name" id="avatar-project-name" value="Новая аватарка" />
+            <div class="topbar-actions">
+              <button class="btn btn-secondary btn-sm" id="avatar-save" title="Сохранить в «Мои проекты» (Ctrl+S)"><i data-lucide="save"></i> В мои проекты</button>
+              <button class="btn btn-ghost btn-sm" id="avatar-new-project" title="Новый проект"><i data-lucide="plus"></i> Новый</button>
+              <button class="btn btn-primary btn-sm" id="avatar-export-btn"><i data-lucide="download"></i> Скачать файл</button>
+            </div>
+          </header>
+          <div class="editor-body avatar-body">
+            <div class="canvas-area avatar-stage" id="avatar-stage">
+              <div class="avatar-preview-wrap" id="avatar-preview-wrap">
+                <canvas id="avatar-canvas"></canvas>
+                <div class="canvas-placeholder" id="avatar-placeholder">
+                  <i data-lucide="user-circle"></i>
+                  <p>Большая сцена аватарки</p>
+                  <button type="button" class="btn btn-primary btn-lg btn-upload-glow" id="avatar-upload-btn">
+                    <i data-lucide="upload"></i> Выбрать файл
+                  </button>
+                </div>
+              </div>
+              <div class="avatar-previews">
+                <div class="mini-preview" id="preview-square"><canvas width="64" height="64"></canvas><span>Квадрат</span></div>
+                <div class="mini-preview" id="preview-circle"><canvas width="64" height="64"></canvas><span>Круг</span></div>
+                <div class="mini-preview" id="preview-small"><canvas width="32" height="32"></canvas><span>Маленький</span></div>
+              </div>
+              <input type="file" id="avatar-file-input" accept="image/*" hidden />
+            </div>
+            <aside class="editor-sidebar right-sidebar" id="avatar-right">
+              <div class="sidebar-section photo-file-actions">
+                <button class="btn btn-primary btn-block btn-upload-glow" id="avatar-upload-btn-side"><i data-lucide="upload"></i> Выбрать файл</button>
+              </div>
+              <div id="avatar-panel-pose" class="panel active">
+                <h4>Позиция и масштаб</h4>
+                <div class="control-group">
+                  <label>Масштаб <span id="val-avatar-scale">1.0</span></label>
+                  <input type="range" id="avatar-scale" min="0.5" max="3" value="1" step="0.05" />
+                </div>
+                <div class="control-group">
+                  <label>Поворот <span id="val-avatar-rot">0°</span></label>
+                  <input type="range" id="avatar-rotate" min="-180" max="180" value="0" />
+                </div>
+                <button class="btn btn-ghost btn-block" id="avatar-center">Центрировать</button>
+                <button class="btn btn-ghost btn-block" id="avatar-reset-pos">Сбросить</button>
+              </div>
+              <div id="avatar-panel-shape" class="panel">
+                <h4>Форма</h4>
+                <div class="btn-group vertical">
+                  <button class="btn btn-ghost shape-btn active" data-shape="circle">Круг</button>
+                  <button class="btn btn-ghost shape-btn" data-shape="square">Квадрат</button>
+                  <button class="btn btn-ghost shape-btn" data-shape="rounded">Скруглённый</button>
+                </div>
+                <h4>Размер экспорта</h4>
+                <div class="btn-group vertical">
+                  <button class="btn btn-ghost size-btn active" data-size="256">256 × 256</button>
+                  <button class="btn btn-ghost size-btn" data-size="128">128 × 128</button>
+                  <button class="btn btn-ghost size-btn" data-size="512">512 × 512</button>
+                  <button class="btn btn-ghost size-btn" data-size="1024">1024 × 1024</button>
+                </div>
+              </div>
+              <div id="avatar-panel-style" class="panel">
+                <h4>Фон</h4>
+                <div class="control-group">
+                  <label>Цвет фона</label>
+                  <input type="color" id="avatar-bg-color" value="#151E32" />
+                </div>
+                <div class="control-group">
+                  <label><input type="checkbox" id="avatar-transparent" /> Прозрачный (PNG)</label>
+                </div>
+                <h4>Рамка</h4>
+                <div class="control-group">
+                  <label>Толщина <span id="val-border">0</span></label>
+                  <input type="range" id="avatar-border" min="0" max="40" value="0" />
+                </div>
+                <div class="control-group">
+                  <label>Цвет рамки</label>
+                  <input type="color" id="avatar-border-color" value="#7657FF" />
+                </div>
+                <div class="control-group">
+                  <label>Свечение <span id="val-glow">0</span></label>
+                  <input type="range" id="avatar-glow" min="0" max="30" value="0" />
+                </div>
+              </div>
+              <div id="avatar-panel-emoji" class="panel">
+                <h4>Эмодзи</h4>
+                <p class="hint">Нажмите, чтобы добавить. Перетащите на сцене.</p>
+                <div class="stickers-grid" id="avatar-stickers">
+                  <button type="button" class="sticker-btn" data-emoji="😂">😂</button>
+                  <button type="button" class="sticker-btn" data-emoji="🔥">🔥</button>
+                  <button type="button" class="sticker-btn" data-emoji="💯">💯</button>
+                  <button type="button" class="sticker-btn" data-emoji="👀">👀</button>
+                  <button type="button" class="sticker-btn" data-emoji="💀">💀</button>
+                  <button type="button" class="sticker-btn" data-emoji="✨">✨</button>
+                  <button type="button" class="sticker-btn" data-emoji="🚀">🚀</button>
+                  <button type="button" class="sticker-btn" data-emoji="❤️">❤️</button>
+                  <button type="button" class="sticker-btn" data-emoji="😎">😎</button>
+                  <button type="button" class="sticker-btn" data-emoji="🎉">🎉</button>
+                  <button type="button" class="sticker-btn" data-emoji="👍">👍</button>
+                  <button type="button" class="sticker-btn" data-emoji="⭐">⭐</button>
+                  <button type="button" class="sticker-btn" data-emoji="👑">👑</button>
+                  <button type="button" class="sticker-btn" data-emoji="💫">💫</button>
+                  <button type="button" class="sticker-btn" data-emoji="🌈">🌈</button>
+                  <button type="button" class="sticker-btn" data-emoji="💎">💎</button>
+                </div>
+                <div class="control-group">
+                  <label>Размер эмодзи <span id="val-avatar-emoji-size">48</span></label>
+                  <input type="range" id="avatar-emoji-size" min="24" max="120" value="48" />
+                </div>
+                <div id="avatar-emoji-layers" class="layers-list"></div>
+              </div>
+            </aside>
+          </div>
+          <div class="photo-bottom-bar avatar-bottom-bar" id="avatar-bottom-bar">
+            <div class="bottom-tools">
+              <button class="tool-btn active" data-tool="pose" title="Позиция"><i data-lucide="move"></i><span>Позиция</span></button>
+              <button class="tool-btn" data-tool="shape" title="Форма"><i data-lucide="circle"></i><span>Форма</span></button>
+              <button class="tool-btn" data-tool="style" title="Стиль"><i data-lucide="palette"></i><span>Стиль</span></button>
+              <button class="tool-btn" data-tool="emoji" title="Эмодзи"><i data-lucide="smile"></i><span>Эмодзи</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS VIEW -->
+      <section id="view-projects" class="view">
+        <div class="projects-page">
+          <div class="section-header">
+            <h2>Мои проекты</h2>
+            <button class="btn btn-primary" id="new-project-btn"><i data-lucide="plus"></i> Новый проект</button>
+          </div>
+          <div id="projects-list" class="projects-grid">
+            <div class="empty-card">
+              <i data-lucide="folder-open"></i>
+              <p>Проектов пока нет</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Export Modal -->
+  <div id="export-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3>Скачать на компьютер</h3>
+        <button class="icon-btn modal-close" aria-label="Закрыть"><i data-lucide="x"></i></button>
+      </header>
+      <div class="modal-body">
+        <p class="hint" style="margin-bottom:14px">Файл сохранится в папку «Загрузки» браузера. Это готовый результат (не путать с «В мои проекты»).</p>
+        <div class="control-group">
+          <label>Формат файла</label>
+          <select id="export-format" class="input">
+            <option value="png">PNG — без потерь</option>
+            <option value="jpeg">JPG — меньше размер</option>
+          </select>
+        </div>
+        <div class="control-group" id="export-quality-group">
+          <label>Качество JPG <span id="val-export-quality">92</span>%</label>
+          <input type="range" id="export-quality" min="50" max="100" value="92" />
+        </div>
+        <div class="control-group" id="export-size-info">
+          <label>Размер</label>
+          <p id="export-dims" class="hint">—</p>
+        </div>
+        <div class="progress-wrap hidden" id="export-progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="export-progress"></div></div>
+          <p id="export-status">Подготовка…</p>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-ghost modal-close">Отмена</button>
+        <button class="btn btn-primary btn-lg" id="export-confirm"><i data-lucide="download"></i> Скачать файл</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden" role="dialog">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3>Настройки стиля</h3>
+        <button class="icon-btn modal-close"><i data-lucide="x"></i></button>
+      </header>
+      <div class="modal-body">
+        <div class="control-group">
+          <label>Тема интерфейса</label>
+          <select id="theme-select" class="input">
+            <option value="neon-glass">Neon Glass</option>
+            <option value="midnight-purple">Midnight Purple</option>
+            <option value="arctic-blue">Arctic Blue</option>
+            <option value="minimal-dark">Minimal Dark</option>
+            <option value="light">Light Mode</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Акцентный цвет</label>
+          <select id="style-accent" class="input">
+            <option value="default">Фиолетовый</option>
+            <option value="pink">Розовый</option>
+            <option value="cyan">Голубой</option>
+            <option value="green">Зелёный</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Скругление углов <span id="val-style-radius">12px</span></label>
+          <input type="range" id="style-radius" min="4" max="24" value="12" />
+        </div>
+        <div class="control-group">
+          <label>Размер шрифта <span id="val-style-font">100%</span></label>
+          <input type="range" id="style-font" min="85" max="120" value="100" />
+        </div>
+        <div class="control-group">
+          <label>Прозрачность панелей <span id="val-style-glass">75%</span></label>
+          <input type="range" id="style-glass" min="40" max="95" value="75" />
+        </div>
+        <div class="control-group">
+          <label><input type="checkbox" id="reduce-motion" /> Уменьшить анимации</label>
+        </div>
+        <p class="hint">Настройки стиля сохраняются в браузере.</p>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-primary modal-close">Готово</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="modal hidden" role="dialog">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content small">
+      <header class="modal-header">
+        <h3 id="confirm-title">Подтверждение</h3>
+        <button class="icon-btn modal-close"><i data-lucide="x"></i></button>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-ghost modal-close">Отмена</button>
+        <button class="btn btn-danger" id="confirm-ok">Удалить</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="./js/core/utils.js"></script>
+  <script src="./js/core/storage.js"></script>
+  <script src="./js/core/history.js"></script>
+  <script src="./js/core/toast.js"></script>
+  <script src="./js/editors/photo.js"></script>
+  <script src="./js/editors/video.js"></script>
+  <script src="./js/editors/avatar.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
